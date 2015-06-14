@@ -1,0 +1,9 @@
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\bin\Debug\MCServerForm.exe.config
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\bin\Debug\MCServerForm.exe
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\bin\Debug\MCServerForm.pdb
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\MCServerForm.csprojResolveAssemblyReference.cache
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\MCServerForm.Properties.Resources.resources
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\MCServerForm.csproj.GenerateResource.Cache
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\MCServerForm.exe
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\MCServerForm.pdb
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\MCServerForm.ServerForm.resources
