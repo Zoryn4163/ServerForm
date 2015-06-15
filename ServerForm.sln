@@ -7,14 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerForm", "ServerForm\Se
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 1
+		SccNumberOfProjects = 2
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://zoryn.visualstudio.com/defaultcollection
-		SccProjectUniqueName0 = ServerForm\\ServerForm.csproj
-		SccProjectName0 = ServerForm
-		SccAuxPath0 = https://zoryn.visualstudio.com/defaultcollection
-		SccLocalPath0 = ServerForm
-		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = ServerForm\\ServerForm.csproj
+		SccProjectName1 = ServerForm
+		SccLocalPath1 = ServerForm
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

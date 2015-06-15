@@ -20,5 +20,14 @@ namespace ServerForm
             if (OnAdd != null)
                 OnAdd(this, null);
         }
+
+        public void AddRange(T[] items)
+        {
+            if (OnBeforeAdd != null)
+                OnBeforeAdd(this, null);
+            base.AddRange(items);
+            if (OnAdd != null)
+                OnAdd(this, null);
+        }
     }
 }

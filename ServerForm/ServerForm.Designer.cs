@@ -66,7 +66,8 @@
             this.splitContainer1.Panel2.Controls.Add(this.txtbxConsole);
             this.splitContainer1.Size = new System.Drawing.Size(548, 429);
             this.splitContainer1.SplitterDistance = 381;
-            this.splitContainer1.TabIndex = 1;
+            this.splitContainer1.TabIndex = 999;
+            this.splitContainer1.TabStop = false;
             // 
             // txtbxConsole
             // 
@@ -100,6 +101,7 @@
             this.Text = "Minecraft Forge Server";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.Resize += new System.EventHandler(this.ServerForm_Resize);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();

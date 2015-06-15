@@ -7,6 +7,12 @@ C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj
 C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\ServerForm.exe
 C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\ServerForm.pdb
 C:\Users\Zoryn\Source\Workspaces\Master-Collection\MCServerForm\MCServerForm\obj\Debug\ServerForm.csprojResolveAssemblyReference.cache
-C:\Users\Zoryn\Source\Repos\Master-Git-Collection\ServerForm\ServerForm\bin\Debug\ServerForm.exe.config
-C:\Users\Zoryn\Source\Repos\Master-Git-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.exe
-C:\Users\Zoryn\Source\Repos\Master-Git-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.pdb
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\bin\Debug\ServerForm.exe.config
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.exe
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.pdb
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\bin\Debug\ServerForm.exe
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\bin\Debug\ServerForm.pdb
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.csprojResolveAssemblyReference.cache
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.ServerForm.resources
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.Properties.Resources.resources
+C:\Users\Zoryn\Source\Workspaces\Master-Collection\ServerForm\ServerForm\obj\Debug\ServerForm.csproj.GenerateResource.Cache

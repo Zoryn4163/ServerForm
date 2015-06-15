@@ -26,65 +26,92 @@ namespace ServerForm
         
         ProcessStartInfo psi = new ProcessStartInfo();
         Process server;
+        Boolean KeepAlive;
         StreamWriter inputWriter;
         StreamReader outputReader;
         //StreamReader errorReader;
 
         Thread ServerThread;
-        char[] outBuffer = new char[1024];
-        char[] errorBuffer = new char[1024];
-        char[] baseBuffer = new char[1024];
+        Thread LogThread;
+        char[] outBuffer = new char[4096];
+        char[] errorBuffer = new char[4096];
+        char[] baseBuffer = new char[4096];
         ListEventable<String> PrevCommands;
+        ListEventable<Char> ToLog;
         int PrevNum = 0;
-        int MaxToRemember = 1024;
+        int MaxToRemember = 4096;
 
         String EXEDir = Path.GetDirectoryName((System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace(@"file:///", ""));
+        String EXEName = Path.GetFileNameWithoutExtension((System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace(@"file:///", ""));
         String ConfigLoc;
         Byte[] BaseSettings;
         String[] Settings;
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            CheckForIllegalCrossThreadCalls = false;
-            ConfigLoc = EXEDir + @"\ServerForm.cfg";
-
-            BaseSettings = Encoding.ASCII.GetBytes("<FileName: C:\\File.exe>\r\n<Arguments: -fake=true>\r\n<WorkingDirectory: C:\\Windows\\>\r\n<NoWindow(True/False): True>\r\n<WindowTitle: Server Window>\r\n<MaximumCommandsRemembered: 1024>\r\n[Replace the above lines with what is stated (the colons provide an example). This line and all after will be ignored!]");
-
-            if (!File.Exists(ConfigLoc))
+            try
             {
-                FileStream fs = File.Create(ConfigLoc);
-                fs.Write(BaseSettings, 0, BaseSettings.Length);
-                fs.Flush();
-                fs.Close();
-                MessageBox.Show("Config file generated. Please fill it with the information requested.", "Closing", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                Process.Start(ConfigLoc);
-                Environment.Exit(2);
+                CheckForIllegalCrossThreadCalls = false;
+                ConfigLoc = EXEDir + "\\" + EXEName + @".cfg";
+
+                BaseSettings = Encoding.ASCII.GetBytes("<FileName: C:\\File.exe>\r\n<Arguments: -fake=true>\r\n<WorkingDirectory: C:\\Windows\\>\r\n<NoWindow(True/False): True>\r\n<WindowTitle: Server Window>\r\n<MaximumCommandsRemembered: 4096>\r\n<KeepAlive: False>\r\n[Replace the above lines with what is stated (the colons provide an example). This line and all after will be ignored!]");
+
+                if (!File.Exists(ConfigLoc))
+                {
+                    FileStream fs = File.Create(ConfigLoc);
+                    fs.Write(BaseSettings, 0, BaseSettings.Length);
+                    fs.Flush();
+                    fs.Close();
+                    MessageBox.Show("Config file generated. Please fill it with the information requested.", "Closing", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    Process.Start(ConfigLoc);
+                    Environment.Exit(2);
+                }
+                Settings = File.ReadAllLines(ConfigLoc);
+
+                //GC.KeepAlive(Settings);
+                //GC.KeepAlive(txtbxLog);
+                //GC.KeepAlive(outBuffer);
+                //GC.KeepAlive(baseBuffer);
+                //GC.KeepAlive(PrevCommands);
+                GC.KeepAlive(ToLog);
+                KeepAlive = Boolean.Parse(Settings[6]);
+
+                txtbxConsole.Multiline = false;
+                PrevCommands = new ListEventable<String>();
+                PrevCommands.OnAdd += PrevCommands_OnAdd;
+                MaxToRemember = Int32.Parse(Settings[5]);
+
+                ToLog = new ListEventable<Char>();
+
+                this.Text = Settings[4];
+                notifyTray.Text = Settings[4];
+                notifyTray.Visible = true;
+                //notifyTray.ShowBalloonTip(0);
+                ContextMenu cm = new ContextMenu();
+                cm.MenuItems.Add(new MenuItem("Hide"));
+                cm.MenuItems[0].Click += ServerForm_ShowHideClick;
+                cm.MenuItems.Add(new MenuItem("Open Program Dir"));
+                cm.MenuItems[1].Click += ServerForm_OpenDirClick;
+                cm.MenuItems.Add(new MenuItem("Open Process Dir"));
+                cm.MenuItems[2].Click += ServerForm_OpenPrcClick;
+                cm.MenuItems.Add(new MenuItem("Exit"));
+                cm.MenuItems[3].Click += ServerForm_ExitClick;
+                notifyTray.ContextMenu = cm;
+
+                ServerThread = new Thread(new ThreadStart(ServerWork));
+                ServerThread.Start();
+
+                LogThread = new Thread(new ThreadStart(LogWork));
+                LogThread.Start();
+
+                txtbxConsole.Select();
             }
-            Settings = File.ReadAllLines(ConfigLoc);
-
-            txtbxConsole.Multiline = false;
-            PrevCommands = new ListEventable<String>();
-            PrevCommands.OnAdd += PrevCommands_OnAdd;
-            MaxToRemember = Int32.Parse(Settings[5]);
-
-            this.Text = Settings[4];
-            notifyTray.Text = Settings[4];
-            notifyTray.Visible = true;
-            //notifyTray.ShowBalloonTip(0);
-            ContextMenu cm = new ContextMenu();
-            cm.MenuItems.Add(new MenuItem("Hide"));
-            cm.MenuItems[0].Click += ServerForm_ShowHideClick;
-            cm.MenuItems.Add(new MenuItem("Open Program Dir"));
-            cm.MenuItems[1].Click += ServerForm_OpenDirClick;
-            cm.MenuItems.Add(new MenuItem("Open Process Dir"));
-            cm.MenuItems[2].Click += ServerForm_OpenPrcClick;
-            cm.MenuItems.Add(new MenuItem("Exit"));
-            cm.MenuItems[3].Click += ServerForm_ExitClick;
-            notifyTray.ContextMenu = cm;
-
-            ServerThread = new Thread(new ThreadStart(ServerWork));
-            ServerThread.Start();
-            txtbxConsole.Select();
+            catch (Exception ex)
+            {
+                this.Enabled = false;
+                MessageBox.Show("This is most-likely due to a config issue.\r\n\r\n" + ex.ToString(), "An error has occurred!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(-1);
+            }
         }
 
         void PrevCommands_OnAdd(object sender, EventArgs e)
@@ -97,21 +124,23 @@ namespace ServerForm
         {
             this.Close();
         }
-
         void ServerForm_ShowHideClick(object sender, EventArgs e)
         {
             if (this.Visible)
             {
+                if (this.WindowState == FormWindowState.Minimized)
+                    this.WindowState = FormWindowState.Normal;
                 this.Hide();
                 notifyTray.ContextMenu.MenuItems[0].Text = "Show";
             }
             else
             {
+                if (this.WindowState == FormWindowState.Minimized)
+                    this.WindowState = FormWindowState.Normal;
                 this.Show();
                 notifyTray.ContextMenu.MenuItems[0].Text = "Hide";
             }
         }
-
         void ServerForm_OpenDirClick(object sender, EventArgs e)
         {
             Process.Start(EXEDir);
@@ -141,7 +170,7 @@ namespace ServerForm
                             Similar[i].Kill();
                 }
 
-                //psi.Arguments = @"-server -Xms1024m -Xmx3072m -XX:PermSize=256m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -jar forge-1.7.10-10.13.3.1388-1.7.10-universal.jar nogui";
+                //psi.Arguments = @"-server -Xms4096m -Xmx3072m -XX:PermSize=256m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -jar forge-1.7.10-10.13.3.1388-1.7.10-universal.jar nogui";
                 psi.Arguments = Settings[1];
                 //psi.WorkingDirectory = @"E:\Users\Zoryn\AppData\Roaming\.technic\#Servers\Forge";
                 psi.WorkingDirectory = Settings[2];
@@ -166,34 +195,126 @@ namespace ServerForm
                 while (true)
                 {
                     if (server.HasExited)
-                        Environment.Exit(-1);
+                        if (KeepAlive)
+                            break;
+                        else
+                            Environment.Exit(-1);
 
                     try
                     {
-                        outBuffer = new char[1024];
+                        outBuffer = new Char[4096];
                         outputReader.Read(outBuffer, 0, outBuffer.Length);
                         if (outBuffer != baseBuffer)
-                            txtbxLog.AppendText(new String(outBuffer));
+                        {
+                            ToLog.AddRange(outBuffer);
+                        }
+                        outBuffer = null;
                     }
                     catch { }
 
-                    txtbxLog.SelectionStart = txtbxLog.Text.Length;
-                    txtbxLog.ScrollToCaret();
+                    
                 }
+                try
+                {
+                    if (ServerThread.ThreadState == System.Threading.ThreadState.Running)
+                        ServerThread.Abort();
+                    if (!txtbxLog.Disposing && !txtbxLog.IsDisposed)
+                    {
+                        lock (txtbxLog)
+                        {
+                            txtbxLog.SelectionColor = Color.Red;
+                            txtbxLog.AppendText(String.Format("[{0}] {1}", DateTime.Now.ToLocalTime(), "The attached process has ended.\r\n"));
+                            txtbxLog.SelectionColor = Color.Black;
+                            while (ToLog.Count > 0) { }
+                            txtbxLog.SelectionColor = Color.Red;
+                            txtbxLog.AppendText(String.Format("[{0}] {1}", DateTime.Now.ToLocalTime(), "The server thread has ended.\r\n"));
+                            txtbxLog.SelectionColor = Color.Black;
+                        }
+                    }
+                }
+                catch { }
             }
             catch (Exception ex)
             {
                 this.Enabled = false;
-                MessageBox.Show("This is most-likely due to a config issue.\r\n\r\n" + ex.ToString(), "An error has occurred!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (ex.Message == "Thread was being aborted.")
+                    Environment.Exit(-3);
+                MessageBox.Show("This is most-likely due to a config issue.\r\n\r\n" + ex.ToString(), "An error has occurred! [ServerWork Thread]", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(-1);
+            }
+        }
+
+        void LogWork()
+        {
+            ToLog.OnAdd += ToLog_OnAdd;
+
+            while (true)
+            {
+                if (server != null && server.HasExited)
+                    break;
+                lock (txtbxLog)
+                {
+                    if (txtbxLog.Lines.Count() > 1024)
+                    {
+                        int difference = txtbxLog.Lines.Count() - 1024;
+                        List<String> s = new List<string>(txtbxLog.Lines);
+                        s.RemoveRange(0, difference);
+                        txtbxLog.Lines = s.ToArray();
+                        ScrollToBottom(txtbxLog);
+                        s = null;
+                    }
+                }
+                //Console.WriteLine("work");
+                System.Threading.Thread.Sleep(1000);
+            }
+            
+            while (ToLog.Count > 0) { }
+            if (!txtbxLog.Disposing && !txtbxLog.IsDisposed)
+            {
+                lock (txtbxLog)
+                {
+                    txtbxLog.SelectionColor = Color.Red;
+                    txtbxLog.AppendText(String.Format("[{0}] {1}", DateTime.Now.ToLocalTime(), "The log thread has ended.\r\n"));
+                    txtbxLog.SelectionColor = Color.Black;
+                    ScrollToBottom(txtbxLog);
+                }
+            }
+            /*
+            while (true)
+            {
+                lock (ToLog)
+                {
+                    txtbxLog.AppendText(new String(ToLog.ToArray()));
+                    ToLog.Clear();
+                }
+                txtbxLog.ScrollToCaret();
+                System.Threading.Thread.Sleep(1000);
+            }
+            */
+        }
+
+        void ToLog_OnAdd(object sender, EventArgs e)
+        {
+            lock (ToLog) lock (txtbxLog)
+            {
+                txtbxLog.AppendText(new String(ToLog.ToArray()));
+                ToLog.Clear();
+                //txtbxLog.ScrollToCaret();
+                ScrollToBottom(txtbxLog);
             }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            server.Kill();
-            server.WaitForExit();
-            ServerThread.Abort();
+            if (!server.HasExited)
+            {
+                server.Kill();
+                server.WaitForExit();
+            }
+            if (ServerThread.ThreadState == System.Threading.ThreadState.Running)
+                ServerThread.Abort();
+            if (LogThread.ThreadState == System.Threading.ThreadState.Running)
+                LogThread.Abort();
         }
 
         private void txtbxConsole_KeyDown(object sender, KeyEventArgs e)
@@ -219,7 +340,8 @@ namespace ServerForm
                 if (PrevCommands.Count() > 0)
                 {
                     GetPrevNum(0);
-                    txtbxConsole.Text = PrevCommands[PrevNum];
+                    txtbxConsole.Clear();
+                    txtbxConsole.AppendText(PrevCommands[PrevNum]);
                 }
             }
             else if (e.KeyCode == Keys.Down)
@@ -234,7 +356,10 @@ namespace ServerForm
                         PrevNum = PrevCommands.Count;
                     }
                     else
-                        txtbxConsole.Text = PrevCommands[PrevNum];
+                    {
+                        txtbxConsole.Clear();
+                        txtbxConsole.AppendText(PrevCommands[PrevNum]);
+                    }
                 }
             }
         }
@@ -269,6 +394,27 @@ namespace ServerForm
             else if (val > max)
                 val = max;
             return val;
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
+        private const int WM_VSCROLL = 277;
+        private const int SB_PAGEBOTTOM = 7;
+
+        public static void ScrollToBottom(RichTextBox MyRichTextBox)
+        {
+            SendMessage(MyRichTextBox.Handle, WM_VSCROLL, (IntPtr)SB_PAGEBOTTOM, IntPtr.Zero);
+        }
+
+        private void ServerForm_ResizeEnd(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ServerForm_Resize(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+                ServerForm_ShowHideClick(sender, e);
         }
     }
 }
